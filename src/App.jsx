@@ -1,35 +1,32 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+// src/App.jsx
+import React from "react";
+import { Link, Route, Routes } from "react-router-dom";
+import DashboardPage from "./pages/Dashboard.jsx";
+import GalleryPage from "./pages/Gallery.jsx";
 
-function App() {
-  const [count, setCount] = useState(0)
-
+const App = () => {
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <div className="flex flex-col items-center justify-center min-h-screen text-white bg-gray-900">
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <div className="text-center">
+              <h1 className="text-4xl mb-8">Welcome to the Admin Dashboard</h1>
+              <Link
+                to="/dashboard"
+                className="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+              >
+                Dashboard Page
+              </Link>
+            </div>
+          }
+        />
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/gallery" element={<GalleryPage />} />
+      </Routes>
+    </div>
+  );
+};
 
-export default App
+export default App;
