@@ -26,7 +26,7 @@ const Gallery = () => {
       setDrawings((prevDrawings) =>
         prevDrawings.filter((drawing) => drawing.id !== drawingId)
       );
-      setSelectedDrawing(null); // Close the modal after deleting
+      setSelectedDrawing(null);
     } catch (error) {
       console.error("Error deleting drawing: ", error);
     }
@@ -47,12 +47,15 @@ const Gallery = () => {
             onClick={() => setSelectedDrawing(drawing)}
           >
             <img
-              src={drawing.enhanced_drawings}
+              src={drawing.enhanced_drawings[0]}
               alt={`Drawing ${index}`}
               className="w-full h-auto object-cover transform transition-transform duration-300 group-hover:scale-110"
             />
-            <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center text-xl text-white font-bold">
-              Drawing {index + 1}
+            <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center text-xl text-white font-bold">
+              <span>User: {drawing.user_id?.id || "N/A"}</span>
+              {drawing.displayArea && (
+                <span>Display Area: {drawing.displayArea}</span>
+              )}
             </div>
           </div>
         ))}
