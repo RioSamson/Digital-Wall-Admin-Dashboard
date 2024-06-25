@@ -3,6 +3,8 @@ import React from "react";
 import { Link, Route, Routes } from "react-router-dom";
 import DashboardPage from "./pages/Dashboard.jsx";
 import GalleryPage from "./pages/Gallery.jsx";
+import ManageThemesPage from "./pages/ManageThemes.jsx";
+import NewThemePage from "./pages/NewThemePage.jsx";
 
 const App = () => {
   return (
@@ -24,6 +26,8 @@ const App = () => {
         />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/gallery" element={<GalleryPage />} />
+        <Route path="/manage-themes" element={<ManageThemesPage />} />
+        <Route path="/new-theme" element={<NewThemePage />} />
       </Routes>
     </div>
   );
