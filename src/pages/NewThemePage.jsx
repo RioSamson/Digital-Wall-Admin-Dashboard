@@ -1,4 +1,3 @@
-// src/pages/NewThemePage.jsx
 import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { storage, db } from "../firebaseConfig";
@@ -13,6 +12,9 @@ const NewThemePage = () => {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
   const [coordinates, setCoordinates] = useState([]);
+  const [selectedArea, setSelectedArea] = useState("");
+  const [undoStack, setUndoStack] = useState([]);
+  const [redoStack, setRedoStack] = useState([]);
   const navigate = useNavigate();
   const imageRef = useRef(null);
 
@@ -25,10 +27,15 @@ const NewThemePage = () => {
   };
 
   const handleImageClick = (e) => {
+    if (!selectedArea) return;
+
     const rect = imageRef.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
-    setCoordinates((prev) => [...prev, { x, y }]);
+    const newCoord = { x, y, area: selectedArea };
+    setCoordinates((prev) => [...prev, newCoord]);
+    setUndoStack((prev) => [...prev, newCoord]);
+    setRedoStack([]);
   };
 
   const handleSubmit = async (e) => {
@@ -69,86 +76,181 @@ const NewThemePage = () => {
     setUploading(false);
   };
 
+  const handleCancel = () => {
+    navigate("/manage-themes");
+  };
+
+  const toggleArea = (area) => {
+    setSelectedArea((prev) => (prev === area ? "" : area));
+  };
+
+  const handleUndo = () => {
+    if (undoStack.length > 0) {
+      const lastAction = undoStack.pop();
+      setCoordinates((prev) => prev.filter((coord) => coord !== lastAction));
+      setRedoStack((prev) => [lastAction, ...prev]);
+    }
+  };
+
+  const handleRedo = () => {
+    if (redoStack.length > 0) {
+      const lastAction = redoStack.shift();
+      setCoordinates((prev) => [...prev, lastAction]);
+      setUndoStack((prev) => [...prev, lastAction]);
+    }
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen text-white bg-gray-900">
+    <div className="flex flex-col items-center justify-center min-h-screen text-white bg-gray-900 p-4">
       <h1 className="text-4xl mb-8">Add New Theme</h1>
-      <div className="flex w-full max-w-6xl">
-        <div className="w-2/3 flex flex-col items-center">
-          {backgroundImgUrl ? (
-            <div className="relative">
+      <form onSubmit={handleSubmit} className="w-full max-w-4xl">
+        <div className="mb-4">
+          <label
+            className="block text-gray-400 text-sm font-bold mb-2"
+            htmlFor="themeName"
+          >
+            Theme Name
+          </label>
+          <input
+            type="text"
+            id="themeName"
+            value={themeName}
+            onChange={(e) => setThemeName(e.target.value)}
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          />
+        </div>
+        <div className="mb-4">
+          <label
+            className="block text-gray-400 text-sm font-bold mb-2"
+            htmlFor="description"
+          >
+            Description
+          </label>
+          <textarea
+            id="description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          />
+        </div>
+        <div className="mb-4">
+          <label
+            className="block text-gray-400 text-sm font-bold mb-2"
+            htmlFor="backgroundImg"
+          >
+            Background Image
+          </label>
+          <input
+            type="file"
+            id="backgroundImg"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          />
+        </div>
+        {backgroundImgUrl && (
+          <>
+            <div className="relative mb-1">
               <img
                 src={backgroundImgUrl}
                 alt="Background Preview"
-                className="w-full h-auto"
+                className="w-full h-auto max-h-96 object-contain"
                 ref={imageRef}
                 onClick={handleImageClick}
               />
               {coordinates.map((coord, index) => (
                 <div
                   key={index}
-                  className="absolute border border-red-500"
+                  className="absolute"
                   style={{
                     left: `${coord.x}%`,
                     top: `${coord.y}%`,
-                    width: "20px",
-                    height: "20px",
+                    width: "40px",
+                    height: "40px",
                     transform: "translate(-50%, -50%)",
+                    borderWidth: "3px",
+                    borderColor:
+                      coord.area === "top"
+                        ? "red"
+                        : coord.area === "center"
+                        ? "yellow"
+                        : "black",
+                    borderStyle: "solid",
                   }}
                 />
               ))}
             </div>
-          ) : (
-            <p className="text-gray-400">No image selected</p>
-          )}
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            className="mt-4"
-          />
+            <div className="flex justify-around mb-4">
+              <button
+                type="button"
+                className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline"
+                onClick={handleUndo}
+              >
+                Undo
+              </button>
+              <button
+                type="button"
+                className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-2 rounded focus:outline-none focus:shadow-outline"
+                onClick={handleRedo}
+              >
+                Redo
+              </button>
+            </div>
+            <div className="flex justify-around mb-8">
+              <button
+                type="button"
+                className={`${
+                  selectedArea === "top"
+                    ? "bg-red-700 border-2 border-white"
+                    : "bg-red-500 hover:bg-red-700"
+                } text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline`}
+                onClick={() => toggleArea("top")}
+              >
+                Top
+              </button>
+              <button
+                type="button"
+                className={`${
+                  selectedArea === "center"
+                    ? "bg-yellow-700 border-2 border-white"
+                    : "bg-yellow-500 hover:bg-yellow-700"
+                } text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline`}
+                onClick={() => toggleArea("center")}
+              >
+                Center
+              </button>
+              <button
+                type="button"
+                className={`${
+                  selectedArea === "bottom"
+                    ? "bg-gray-900 border-2 border-white"
+                    : "bg-black hover:bg-gray-900"
+                } text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline`}
+                onClick={() => toggleArea("bottom")}
+              >
+                Bottom
+              </button>
+            </div>
+          </>
+        )}
+        {error && <p className="text-red-500 text-xs italic">{error}</p>}
+        <div className="flex justify-between mt-20">
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={uploading}
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          >
+            {uploading ? "Uploading..." : "Add Theme"}
+          </button>
         </div>
-        <form onSubmit={handleSubmit} className="w-1/3 ml-8">
-          <div className="mb-4">
-            <label
-              className="block text-gray-400 text-sm font-bold mb-2"
-              htmlFor="themeName"
-            >
-              Theme Name
-            </label>
-            <input
-              type="text"
-              id="themeName"
-              value={themeName}
-              onChange={(e) => setThemeName(e.target.value)}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            />
-          </div>
-          <div className="mb-4">
-            <label
-              className="block text-gray-400 text-sm font-bold mb-2"
-              htmlFor="description"
-            >
-              Description
-            </label>
-            <textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            />
-          </div>
-          {error && <p className="text-red-500 text-xs italic">{error}</p>}
-          <div className="flex items-center justify-between">
-            <button
-              type="submit"
-              disabled={uploading}
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-            >
-              {uploading ? "Uploading..." : "Add Theme"}
-            </button>
-          </div>
-        </form>
-      </div>
+      </form>
     </div>
   );
 };
