@@ -5,12 +5,13 @@ import { db, storage } from "../firebaseConfig";
 import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { ref, deleteObject } from "firebase/storage";
 
+// Inside your ManageThemes component
 const ManageThemes = () => {
   const [themes, setThemes] = useState([]);
   const [selectedTheme, setSelectedTheme] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [themeToDelete, setThemeToDelete] = useState(null);
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // Add this line
 
   const fetchThemes = async () => {
     try {
@@ -104,6 +105,16 @@ const ManageThemes = () => {
                   className="bg-gray-600 hover:bg-gray-800 text-white font-bold py-2 px-6 rounded-full shadow-md transition-all duration-300"
                 >
                   Cancel
+                </button>
+                <button
+                  onClick={() =>
+                    navigate(`/edit-theme/${selectedTheme.id}`, {
+                      state: { theme: selectedTheme },
+                    })
+                  }
+                  className="bg-blue-600 hover:bg-blue-800 text-white font-bold py-2 px-6 rounded-full shadow-md transition-all duration-300"
+                >
+                  Edit Theme
                 </button>
                 <button
                   onClick={() => {

@@ -1,11 +1,11 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { storage, db } from "../firebaseConfig";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { collection, addDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 import ImageEditor from "../components/ImageEditor";
 
-const NewThemePage = () => {
+const EditThemePage = () => {
   const [themeName, setThemeName] = useState("");
   const [description, setDescription] = useState("");
   const [backgroundImg, setBackgroundImg] = useState(null);
@@ -17,10 +17,33 @@ const NewThemePage = () => {
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
   const navigate = useNavigate();
+  const { id } = useParams();
+
+  useEffect(() => {
+    const fetchTheme = async () => {
+      try {
+        const docRef = doc(db, "Themes", id);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setThemeName(data.Name);
+          setDescription(data.description);
+          setBackgroundImgUrl(data.background_img);
+          setCoordinates(data.coordinates);
+        } else {
+          console.error("No such document!");
+        }
+      } catch (error) {
+        console.error("Error fetching theme:", error);
+      }
+    };
+
+    fetchTheme();
+  }, [id]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!themeName || !description || !backgroundImg) {
+    if (!themeName || !description) {
       setError("All fields are required.");
       return;
     }
@@ -28,27 +51,27 @@ const NewThemePage = () => {
     setUploading(true);
 
     try {
-      const storageRef = ref(storage, `themes/${backgroundImg.name}`);
-      const snapshot = await uploadBytes(storageRef, backgroundImg);
-      const url = await getDownloadURL(snapshot.ref);
+      let imageUrl = backgroundImgUrl;
 
-      await addDoc(collection(db, "Themes"), {
+      if (backgroundImg) {
+        const storageRef = ref(storage, `themes/${backgroundImg.name}`);
+        const snapshot = await uploadBytes(storageRef, backgroundImg);
+        imageUrl = await getDownloadURL(snapshot.ref);
+      }
+
+      const docRef = doc(db, "Themes", id);
+      await updateDoc(docRef, {
         Name: themeName,
         description,
-        background_img: url,
+        background_img: imageUrl,
         coordinates,
       });
 
-      setThemeName("");
-      setDescription("");
-      setBackgroundImg(null);
-      setBackgroundImgUrl(null);
-      setCoordinates([]);
       setError(null);
       navigate("/manage-themes");
     } catch (err) {
-      console.error("Error uploading theme:", err);
-      setError("Error uploading theme. Please try again.");
+      console.error("Error updating theme:", err);
+      setError("Error updating theme. Please try again.");
     }
 
     setUploading(false);
@@ -60,7 +83,7 @@ const NewThemePage = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen text-white bg-gray-900 p-4">
-      <h1 className="text-4xl mb-8">Add New Theme</h1>
+      <h1 className="text-4xl mb-8">Edit Theme</h1>
       <form onSubmit={handleSubmit} className="w-full max-w-4xl">
         <div className="mb-4">
           <label
@@ -74,7 +97,7 @@ const NewThemePage = () => {
             id="themeName"
             value={themeName}
             onChange={(e) => setThemeName(e.target.value)}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-white leading-tight bg-black focus:outline-none focus:shadow-outline"
           />
         </div>
         <div className="mb-4">
@@ -88,7 +111,7 @@ const NewThemePage = () => {
             id="description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-white leading-tight bg-black focus:outline-none focus:shadow-outline"
           />
         </div>
         <ImageEditor
@@ -103,6 +126,7 @@ const NewThemePage = () => {
           setUndoStack={setUndoStack}
           redoStack={redoStack}
           setRedoStack={setRedoStack}
+          initialCoordinates={coordinates}
         />
         {error && <p className="text-red-500 text-xs italic">{error}</p>}
         <div className="flex justify-between mt-20">
@@ -118,7 +142,16 @@ const NewThemePage = () => {
             disabled={uploading}
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
           >
-            {uploading ? "Uploading..." : "Add Theme"}
+            {uploading ? "Uploading..." : "Update Theme"}
+          </button>
+        </div>
+        <div className="flex justify-center mt-10">
+          <button
+            type="button"
+            onClick={() => handleDelete(id, backgroundImgUrl)}
+            className="bg-red-600 hover:bg-red-800 text-white font-bold py-2 px-6 rounded-full shadow-md transition-all duration-300"
+          >
+            Delete Theme
           </button>
         </div>
       </form>
@@ -126,4 +159,4 @@ const NewThemePage = () => {
   );
 };
 
-export default NewThemePage;
+export default EditThemePage;
