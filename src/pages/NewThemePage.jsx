@@ -8,6 +8,7 @@ import ImageEditor from "../components/ImageEditor";
 const NewThemePage = () => {
   const [themeName, setThemeName] = useState("");
   const [description, setDescription] = useState("");
+  const [aiPrompts, setAiPrompts] = useState(""); // New state for AI prompts
   const [backgroundImg, setBackgroundImg] = useState(null);
   const [backgroundImgUrl, setBackgroundImgUrl] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -20,7 +21,7 @@ const NewThemePage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!themeName || !description || !backgroundImg) {
+    if (!themeName || !description || !backgroundImg || !aiPrompts) {
       setError("All fields are required.");
       return;
     }
@@ -35,12 +36,14 @@ const NewThemePage = () => {
       await addDoc(collection(db, "Themes"), {
         Name: themeName,
         description,
+        aiPrompts, // Include the new field
         background_img: url,
         coordinates,
       });
 
       setThemeName("");
       setDescription("");
+      setAiPrompts(""); // Clear the new field
       setBackgroundImg(null);
       setBackgroundImgUrl(null);
       setCoordinates([]);
@@ -74,7 +77,7 @@ const NewThemePage = () => {
             id="themeName"
             value={themeName}
             onChange={(e) => setThemeName(e.target.value)}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-white leading-tight focus:outline-none focus:shadow-outline"
           />
         </div>
         <div className="mb-4">
@@ -88,7 +91,22 @@ const NewThemePage = () => {
             id="description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-white leading-tight focus:outline-none focus:shadow-outline"
+          />
+        </div>
+        <div className="mb-4">
+          <label
+            className="block text-gray-400 text-sm font-bold mb-2"
+            htmlFor="aiPrompts"
+          >
+            AI prompts for children's drawings
+          </label>
+          <input
+            type="text"
+            id="aiPrompts"
+            value={aiPrompts}
+            onChange={(e) => setAiPrompts(e.target.value)}
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-white leading-tight focus:outline-none focus:shadow-outline"
           />
         </div>
         <ImageEditor

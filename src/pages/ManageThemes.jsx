@@ -1,17 +1,15 @@
-// src/pages/ManageThemes.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { db, storage } from "../firebaseConfig";
 import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { ref, deleteObject } from "firebase/storage";
 
-// Inside your ManageThemes component
 const ManageThemes = () => {
   const [themes, setThemes] = useState([]);
   const [selectedTheme, setSelectedTheme] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [themeToDelete, setThemeToDelete] = useState(null);
-  const navigate = useNavigate(); // Add this line
+  const navigate = useNavigate();
 
   const fetchThemes = async () => {
     try {
@@ -99,6 +97,18 @@ const ManageThemes = () => {
                 alt="Selected Theme"
                 className="max-w-full max-h-96 mb-4"
               />
+              <p className="text-white mb-4">
+                URL:{" "}
+                <a
+                  href={`https://digital-art-wall.vercel.app/display?theme=${selectedTheme.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-400 underline"
+                >
+                  https://digital-art-wall.vercel.app/display?theme=
+                  {selectedTheme.id}
+                </a>
+              </p>
               <div className="flex justify-around mt-4">
                 <button
                   onClick={() => setSelectedTheme(null)}

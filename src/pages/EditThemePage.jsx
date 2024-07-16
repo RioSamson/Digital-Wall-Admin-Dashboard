@@ -8,6 +8,7 @@ import ImageEditor from "../components/ImageEditor";
 const EditThemePage = () => {
   const [themeName, setThemeName] = useState("");
   const [description, setDescription] = useState("");
+  const [aiPrompts, setAiPrompts] = useState(""); // New state for AI prompts
   const [backgroundImg, setBackgroundImg] = useState(null);
   const [backgroundImgUrl, setBackgroundImgUrl] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -28,6 +29,7 @@ const EditThemePage = () => {
           const data = docSnap.data();
           setThemeName(data.Name);
           setDescription(data.description);
+          setAiPrompts(data.aiPrompts); // Set the new field
           setBackgroundImgUrl(data.background_img);
           setCoordinates(data.coordinates);
         } else {
@@ -43,7 +45,7 @@ const EditThemePage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!themeName || !description) {
+    if (!themeName || !description || !aiPrompts) {
       setError("All fields are required.");
       return;
     }
@@ -63,6 +65,7 @@ const EditThemePage = () => {
       await updateDoc(docRef, {
         Name: themeName,
         description,
+        aiPrompts, // Include the new field
         background_img: imageUrl,
         coordinates,
       });
@@ -111,6 +114,21 @@ const EditThemePage = () => {
             id="description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-white leading-tight bg-black focus:outline-none focus:shadow-outline"
+          />
+        </div>
+        <div className="mb-4">
+          <label
+            className="block text-gray-400 text-sm font-bold mb-2"
+            htmlFor="aiPrompts"
+          >
+            AI prompts for children's drawings
+          </label>
+          <input
+            type="text"
+            id="aiPrompts"
+            value={aiPrompts}
+            onChange={(e) => setAiPrompts(e.target.value)}
             className="shadow appearance-none border rounded w-full py-2 px-3 text-white leading-tight bg-black focus:outline-none focus:shadow-outline"
           />
         </div>
