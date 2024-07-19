@@ -8,7 +8,7 @@ import ImageEditor from "../components/ImageEditor";
 const NewThemePage = () => {
   const [themeName, setThemeName] = useState("");
   const [description, setDescription] = useState("");
-  const [aiPrompts, setAiPrompts] = useState(""); // New state for AI prompts
+  const [aiPrompts, setAiPrompts] = useState("");
   const [backgroundImg, setBackgroundImg] = useState(null);
   const [backgroundImgUrl, setBackgroundImgUrl] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -17,11 +17,22 @@ const NewThemePage = () => {
   const [selectedArea, setSelectedArea] = useState("");
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
+  const [topAreaName, setTopAreaName] = useState(""); // New state for top area name
+  const [centerAreaName, setCenterAreaName] = useState(""); // New state for center area name
+  const [bottomAreaName, setBottomAreaName] = useState(""); // New state for bottom area name
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!themeName || !description || !backgroundImg || !aiPrompts) {
+    if (
+      !themeName ||
+      !description ||
+      !backgroundImg ||
+      !aiPrompts ||
+      !topAreaName ||
+      !centerAreaName ||
+      !bottomAreaName
+    ) {
       setError("All fields are required.");
       return;
     }
@@ -36,14 +47,20 @@ const NewThemePage = () => {
       await addDoc(collection(db, "Themes"), {
         Name: themeName,
         description,
-        aiPrompts, // Include the new field
+        aiPrompts,
         background_img: url,
+        topAreaName, // Include the new field
+        centerAreaName, // Include the new field
+        bottomAreaName, // Include the new field
         coordinates,
       });
 
       setThemeName("");
       setDescription("");
-      setAiPrompts(""); // Clear the new field
+      setAiPrompts("");
+      setTopAreaName(""); // Clear the new field
+      setCenterAreaName(""); // Clear the new field
+      setBottomAreaName(""); // Clear the new field
       setBackgroundImg(null);
       setBackgroundImgUrl(null);
       setCoordinates([]);
@@ -108,6 +125,53 @@ const NewThemePage = () => {
             onChange={(e) => setAiPrompts(e.target.value)}
             className="shadow appearance-none border rounded w-full py-2 px-3 text-white leading-tight focus:outline-none focus:shadow-outline"
           />
+        </div>
+        <div className="mb-4 flex justify-between">
+          <div className="w-1/3 pr-2">
+            <label
+              className="block text-gray-400 text-sm font-bold mb-2"
+              htmlFor="topAreaName"
+            >
+              Top Area Name
+            </label>
+            <input
+              type="text"
+              id="topAreaName"
+              value={topAreaName}
+              onChange={(e) => setTopAreaName(e.target.value)}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-white leading-tight focus:outline-none focus:shadow-outline"
+            />
+          </div>
+          <div className="w-1/3 px-2">
+            <label
+              className="block text-gray-400 text-sm font-bold mb-2"
+              htmlFor="centerAreaName"
+            >
+              Center Area Name
+            </label>
+            <input
+              type="text"
+              id="centerAreaName"
+              value={centerAreaName}
+              onChange={(e) => setCenterAreaName(e.target.value)}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-white leading-tight focus:outline-none focus:shadow-outline"
+            />
+          </div>
+          <div className="w-1/3 pl-2">
+            <label
+              className="block text-gray-400 text-sm font-bold mb-2"
+              htmlFor="bottomAreaName"
+            >
+              Bottom Area Name
+            </label>
+            <input
+              type="text"
+              id="bottomAreaName"
+              value={bottomAreaName}
+              onChange={(e) => setBottomAreaName(e.target.value)}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-white leading-tight focus:outline-none focus:shadow-outline"
+            />
+          </div>
         </div>
         <ImageEditor
           backgroundImgUrl={backgroundImgUrl}
