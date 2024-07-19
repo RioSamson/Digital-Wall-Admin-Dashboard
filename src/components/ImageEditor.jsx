@@ -129,8 +129,8 @@ const ImageEditor = ({
                 style={{
                   left: `${coord.x}%`,
                   top: `${coord.y}%`,
-                  width: "40px",
-                  height: "40px",
+                  width: "7%", // Ensuring square size
+                  height: "10%", // Ensuring square size
                   transform: "translate(-50%, -50%)",
                   borderWidth: "3px",
                   borderColor:
