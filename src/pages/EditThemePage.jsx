@@ -34,6 +34,7 @@ const EditThemePage = () => {
   const [topAreaName, setTopAreaName] = useState("");
   const [centerAreaName, setCenterAreaName] = useState("");
   const [bottomAreaName, setBottomAreaName] = useState("");
+  const [onlyReviewedDrawings, setOnlyReviewedDrawings] = useState(false);
   const navigate = useNavigate();
   const { id } = useParams();
 
@@ -52,6 +53,7 @@ const EditThemePage = () => {
           setTopAreaName(data.topAreaName || "");
           setCenterAreaName(data.centerAreaName || "");
           setBottomAreaName(data.bottomAreaName || "");
+          setOnlyReviewedDrawings(data.onlyReviewedDrawings || false);
         } else {
           console.error("No such document!");
         }
@@ -145,6 +147,7 @@ const EditThemePage = () => {
         topAreaName,
         centerAreaName,
         bottomAreaName,
+        onlyReviewedDrawings,
       });
 
       setError(null);
@@ -255,6 +258,17 @@ const EditThemePage = () => {
               className="shadow appearance-none border rounded w-full py-2 px-3 text-white leading-tight bg-black focus:outline-none focus:shadow-outline"
             />
           </div>
+        </div>
+        <div className="mb-4">
+          <label className="block text-gray-400 text-sm font-bold mb-2">
+            <input
+              type="checkbox"
+              checked={onlyReviewedDrawings}
+              onChange={(e) => setOnlyReviewedDrawings(e.target.checked)}
+              className="mr-2"
+            />
+            Admin reviews drawing before being displayed
+          </label>
         </div>
         <ImageEditor
           backgroundImgUrl={backgroundImgUrl}

@@ -17,9 +17,10 @@ const NewThemePage = () => {
   const [selectedArea, setSelectedArea] = useState("");
   const [undoStack, setUndoStack] = useState([]);
   const [redoStack, setRedoStack] = useState([]);
-  const [topAreaName, setTopAreaName] = useState(""); // New state for top area name
-  const [centerAreaName, setCenterAreaName] = useState(""); // New state for center area name
-  const [bottomAreaName, setBottomAreaName] = useState(""); // New state for bottom area name
+  const [topAreaName, setTopAreaName] = useState("");
+  const [centerAreaName, setCenterAreaName] = useState("");
+  const [bottomAreaName, setBottomAreaName] = useState("");
+  const [onlyReviewedDrawings, setOnlyReviewedDrawings] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -49,21 +50,23 @@ const NewThemePage = () => {
         description,
         aiPrompts,
         background_img: url,
-        topAreaName, // Include the new field
-        centerAreaName, // Include the new field
-        bottomAreaName, // Include the new field
+        topAreaName,
+        centerAreaName,
+        bottomAreaName,
         coordinates,
+        onlyReviewedDrawings,
       });
 
       setThemeName("");
       setDescription("");
       setAiPrompts("");
-      setTopAreaName(""); // Clear the new field
-      setCenterAreaName(""); // Clear the new field
-      setBottomAreaName(""); // Clear the new field
+      setTopAreaName("");
+      setCenterAreaName("");
+      setBottomAreaName("");
       setBackgroundImg(null);
       setBackgroundImgUrl(null);
       setCoordinates([]);
+      setOnlyReviewedDrawings(false);
       setError(null);
       navigate("/manage-themes");
     } catch (err) {
@@ -172,6 +175,17 @@ const NewThemePage = () => {
               className="shadow appearance-none border rounded w-full py-2 px-3 text-white leading-tight focus:outline-none focus:shadow-outline"
             />
           </div>
+        </div>
+        <div className="mb-4">
+          <label className="block text-gray-400 text-sm font-bold mb-2">
+            <input
+              type="checkbox"
+              checked={onlyReviewedDrawings}
+              onChange={(e) => setOnlyReviewedDrawings(e.target.checked)}
+              className="mr-2"
+            />
+            Admin reviews drawing before being displayed
+          </label>
         </div>
         <ImageEditor
           backgroundImgUrl={backgroundImgUrl}
