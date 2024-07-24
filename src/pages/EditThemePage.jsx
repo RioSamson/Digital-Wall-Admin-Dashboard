@@ -1,8 +1,22 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { storage, db } from "../firebaseConfig";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject,
+} from "firebase/storage";
+import {
+  doc,
+  getDoc,
+  updateDoc,
+  collection,
+  getDocs,
+  query,
+  where,
+  deleteDoc,
+} from "firebase/firestore";
 import ImageEditor from "../components/ImageEditor";
 
 const EditThemePage = () => {
@@ -48,6 +62,53 @@ const EditThemePage = () => {
 
     fetchTheme();
   }, [id]);
+
+  const deleteDrawingsForTheme = async (themeId) => {
+    const drawingsQuery = query(
+      collection(db, "Drawings"),
+      where("theme_id", "==", doc(db, "Themes", themeId))
+    );
+    const drawingsSnapshot = await getDocs(drawingsQuery);
+
+    const deletePromises = drawingsSnapshot.docs.map(async (drawingDoc) => {
+      const drawingData = drawingDoc.data();
+
+      // Delete original drawing image
+      const originalStorageRef = ref(storage, drawingData.original_drawing);
+      await deleteObject(originalStorageRef);
+
+      // Delete enhanced drawing images
+      const deleteEnhancedImagesPromises = drawingData.enhanced_drawings.map(
+        async (url) => {
+          const enhancedStorageRef = ref(storage, url);
+          await deleteObject(enhancedStorageRef);
+        }
+      );
+
+      await Promise.all(deleteEnhancedImagesPromises);
+      await deleteDoc(drawingDoc.ref);
+    });
+
+    await Promise.all(deletePromises);
+  };
+
+  const handleDelete = async (themeId, backgroundImgUrl) => {
+    try {
+      // Delete drawings associated with the theme
+      await deleteDrawingsForTheme(themeId);
+
+      // Delete the theme document
+      await deleteDoc(doc(db, "Themes", themeId));
+
+      // Delete the background image from storage
+      const storageRef = ref(storage, backgroundImgUrl);
+      await deleteObject(storageRef);
+
+      navigate("/manage-themes");
+    } catch (error) {
+      console.error("Error deleting theme: ", error);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
