@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { db, storage } from "../firebaseConfig";
-import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  deleteDoc,
+  doc,
+  query,
+  where,
+} from "firebase/firestore";
 import { ref, deleteObject } from "firebase/storage";
 
 const ManageThemes = () => {
@@ -24,11 +31,47 @@ const ManageThemes = () => {
     }
   };
 
+  const deleteDrawingsForTheme = async (themeId) => {
+    const drawingsQuery = query(
+      collection(db, "Drawings"),
+      where("theme_id", "==", doc(db, "Themes", themeId))
+    );
+    const drawingsSnapshot = await getDocs(drawingsQuery);
+
+    const deletePromises = drawingsSnapshot.docs.map(async (drawingDoc) => {
+      const drawingData = drawingDoc.data();
+
+      // Delete original drawing image
+      const originalStorageRef = ref(storage, drawingData.original_drawing);
+      await deleteObject(originalStorageRef);
+
+      // Delete enhanced drawing images
+      const deleteEnhancedImagesPromises = drawingData.enhanced_drawings.map(
+        async (url) => {
+          const enhancedStorageRef = ref(storage, url);
+          await deleteObject(enhancedStorageRef);
+        }
+      );
+
+      await Promise.all(deleteEnhancedImagesPromises);
+      await deleteDoc(drawingDoc.ref);
+    });
+
+    await Promise.all(deletePromises);
+  };
+
   const handleDelete = async (themeId, backgroundImgUrl) => {
     try {
+      // Delete drawings associated with the theme
+      await deleteDrawingsForTheme(themeId);
+
+      // Delete the theme document
       await deleteDoc(doc(db, "Themes", themeId));
+
+      // Delete the background image from storage
       const storageRef = ref(storage, backgroundImgUrl);
       await deleteObject(storageRef);
+
       setThemes((prevThemes) =>
         prevThemes.filter((theme) => theme.id !== themeId)
       );
