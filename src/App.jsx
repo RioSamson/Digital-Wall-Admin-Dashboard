@@ -1,10 +1,13 @@
+// src/App.jsx
 import React from "react";
 import { Link, Route, Routes } from "react-router-dom";
 import DashboardPage from "./pages/Dashboard.jsx";
 import GalleryPage from "./pages/Gallery.jsx";
 import ManageThemesPage from "./pages/ManageThemes.jsx";
 import NewThemePage from "./pages/NewThemePage.jsx";
-import EditThemePage from "./pages/EditThemePage.jsx"; // Import the EditThemePage
+import EditThemePage from "./pages/EditThemePage.jsx";
+import ManageAIPage from "./pages/ManageAI.jsx";
+import AddEditModelPage from "./pages/AddEditModel.jsx";
 
 const App = () => {
   return (
@@ -28,8 +31,10 @@ const App = () => {
         <Route path="/gallery" element={<GalleryPage />} />
         <Route path="/manage-themes" element={<ManageThemesPage />} />
         <Route path="/new-theme" element={<NewThemePage />} />
-        <Route path="/edit-theme/:id" element={<EditThemePage />} />{" "}
-        {/* Add this route */}
+        <Route path="/edit-theme/:id" element={<EditThemePage />} />
+        <Route path="/manage-ai" element={<ManageAIPage />} />
+        <Route path="/manage-ai/add" element={<AddEditModelPage />} />
+        <Route path="/manage-ai/edit/:id" element={<AddEditModelPage />} />
       </Routes>
     </div>
   );
