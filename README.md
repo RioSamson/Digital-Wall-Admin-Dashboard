@@ -1,17 +1,21 @@
 # Admin Dashboard for the Digital Art Wall Website Application with BCCH and CDM
 
+## Developers:
+### Rio Samson
+- LinkedIn: https://ca.linkedin.com/in/riosamson
+### Sadaf Ahmadi
+
 ## Starting commands:
 
-- npm install
-- npm run dev
+- ```cd Digital-Wall-Admin-Dashboard```
+- ```npm install```
+- ```npm run dev```
+- open in browser with the given link or on phone with the IP address over the wifi
+  - ```http://localhost:5173```
 
 ### Vite + React
 
-```
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-```
+## Before You start 
+### Create Your Firebase database and Firebase storage (Must have been done before you run main app)
+- Once you have made these, you need to update the links in the admin app to point to this new database location
+- In firebaseConfig, you need to put in your own firebase credentials and replace the current one
