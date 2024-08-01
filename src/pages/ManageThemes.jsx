@@ -11,41 +11,61 @@ import {
 } from "firebase/firestore";
 import { ref, deleteObject } from "firebase/storage";
 
+/**
+ * ManageThemes component handles the display, addition, editing, and deletion of themes
+ * within the application. It interacts with the Firestore database to manage themes and
+ * Firebase Storage to handle associated images.
+ *
+ * @component
+ */
 const ManageThemes = () => {
-  const [themes, setThemes] = useState([]);
-  const [selectedTheme, setSelectedTheme] = useState(null);
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const [themeToDelete, setThemeToDelete] = useState(null);
-  const navigate = useNavigate();
+  const [themes, setThemes] = useState([]); // State to store the list of themes fetched from Firestore
+  const [selectedTheme, setSelectedTheme] = useState(null); // State to store the currently selected theme for further actions
+  const [confirmDelete, setConfirmDelete] = useState(false); // State to manage the delete confirmation dialog visibility
+  const [themeToDelete, setThemeToDelete] = useState(null); // State to store the theme selected for deletion
+  const navigate = useNavigate(); // React Router's hook for programmatically navigating between routes
 
+  /**
+   * Fetch all themes from the Firestore database and set the themes state.
+   * This function runs when the component mounts.
+   */
   const fetchThemes = async () => {
     try {
+      // Retrieve all documents from the 'Themes' collection
       const querySnapshot = await getDocs(collection(db, "Themes"));
       const themesList = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
-      }));
-      setThemes(themesList);
+      })); // Map the documents to an array of theme objects with ID and data
+      setThemes(themesList); // Update the themes state with the fetched list
     } catch (error) {
-      console.error("Error fetching themes: ", error);
+      console.error("Error fetching themes: ", error); // Log any errors that occur during the fetch
     }
   };
 
+  /**
+   * Delete all drawings associated with a specific theme. This involves deleting images
+   * from Firebase Storage and documents from Firestore.
+   *
+   * @param {string} themeId - The ID of the theme whose drawings are to be deleted.
+   */
   const deleteDrawingsForTheme = async (themeId) => {
+    // Query drawings associated with the given theme ID
     const drawingsQuery = query(
       collection(db, "Drawings"),
       where("theme_id", "==", doc(db, "Themes", themeId))
     );
-    const drawingsSnapshot = await getDocs(drawingsQuery);
+    const drawingsSnapshot = await getDocs(drawingsQuery); // Execute the query
 
+    // Create an array of promises to delete each drawing
     const deletePromises = drawingsSnapshot.docs.map(async (drawingDoc) => {
       const drawingData = drawingDoc.data();
 
-      // Delete original drawing image
+      // Delete the original drawing image from Firebase Storage
       const originalStorageRef = ref(storage, drawingData.original_drawing);
       await deleteObject(originalStorageRef);
 
-      // Delete enhanced drawing images
+      // Delete each enhanced drawing image from Firebase Storage
       const deleteEnhancedImagesPromises = drawingData.enhanced_drawings.map(
         async (url) => {
           const enhancedStorageRef = ref(storage, url);
@@ -53,39 +73,48 @@ const ManageThemes = () => {
         }
       );
 
-      await Promise.all(deleteEnhancedImagesPromises);
-      await deleteDoc(drawingDoc.ref);
+      await Promise.all(deleteEnhancedImagesPromises); // Wait for all enhanced images to be deleted
+      await deleteDoc(drawingDoc.ref); // Delete the drawing document from Firestore
     });
 
-    await Promise.all(deletePromises);
+    await Promise.all(deletePromises); // Wait for all drawing deletions to complete
   };
 
+  /**
+   * Handles the deletion of a theme by removing all associated drawings, images, and the theme
+   * document itself from the database and storage.
+   *
+   * @param {string} themeId - The ID of the theme to delete.
+   * @param {string} backgroundImgUrl - The URL of the theme's background image to delete.
+   */
   const handleDelete = async (themeId, backgroundImgUrl) => {
     try {
-      // Delete drawings associated with the theme
-      await deleteDrawingsForTheme(themeId);
+      await deleteDrawingsForTheme(themeId); // Delete associated drawings
 
-      // Delete the theme document
-      await deleteDoc(doc(db, "Themes", themeId));
+      await deleteDoc(doc(db, "Themes", themeId)); // Delete the theme document from Firestore
 
-      // Delete the background image from storage
+      // Delete the theme's background image from Firebase Storage
       const storageRef = ref(storage, backgroundImgUrl);
       await deleteObject(storageRef);
 
+      // Update the themes state to reflect the deletion
       setThemes((prevThemes) =>
         prevThemes.filter((theme) => theme.id !== themeId)
       );
-      setSelectedTheme(null);
-      setConfirmDelete(false);
-      setThemeToDelete(null);
+      setSelectedTheme(null); // Reset the selected theme
+      setConfirmDelete(false); // Close the confirmation dialog
+      setThemeToDelete(null); // Clear the themeToDelete state
     } catch (error) {
-      console.error("Error deleting theme: ", error);
+      console.error("Error deleting theme: ", error); // Log any errors during deletion
     }
   };
 
+  /**
+   * Fetch themes from Firestore when the component is mounted.
+   */
   useEffect(() => {
-    fetchThemes();
-  }, []);
+    fetchThemes(); // Call fetchThemes to load themes initially
+  }, []); // Empty dependency array ensures this runs only once on component mount
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen text-white bg-gray-900">
@@ -93,7 +122,7 @@ const ManageThemes = () => {
         <h1 className="text-4xl">Manage Themes</h1>
         <button
           className="bg-gradient-to-r from-blue-400 to-blue-600 hover:from-blue-600 hover:to-blue-800 text-white font-semibold py-2 px-6 rounded-full shadow-lg transition-all duration-300"
-          onClick={() => navigate("/new-theme")}
+          onClick={() => navigate("/new-theme")} // Navigate to the New Theme creation page
         >
           Add New Theme
         </button>
@@ -104,7 +133,7 @@ const ManageThemes = () => {
             <div
               key={index}
               className="relative group overflow-hidden rounded-lg shadow-lg cursor-pointer bg-gray-700 hover:bg-gray-600 transition-all duration-300"
-              onClick={() => setSelectedTheme(theme)}
+              onClick={() => setSelectedTheme(theme)} // Set the selected theme for displaying details or actions
             >
               <div className="w-full" style={{ aspectRatio: "16/9" }}>
                 <img
@@ -129,11 +158,11 @@ const ManageThemes = () => {
         <>
           <div
             className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
-            onClick={() => setSelectedTheme(null)}
+            onClick={() => setSelectedTheme(null)} // Close the modal when clicking outside
           >
             <div
               className="bg-gray-900 bg-opacity-90 p-6 rounded-lg relative max-w-3xl mx-auto shadow-lg"
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()} // Prevent modal close when clicking inside
             >
               <img
                 src={selectedTheme.background_img}
@@ -154,16 +183,17 @@ const ManageThemes = () => {
               </p>
               <div className="flex justify-around mt-4">
                 <button
-                  onClick={() => setSelectedTheme(null)}
+                  onClick={() => setSelectedTheme(null)} // Close modal
                   className="bg-gray-600 hover:bg-gray-800 text-white font-bold py-2 px-6 rounded-full shadow-md transition-all duration-300"
                 >
                   Cancel
                 </button>
                 <button
-                  onClick={() =>
-                    navigate(`/edit-theme/${selectedTheme.id}`, {
-                      state: { theme: selectedTheme },
-                    })
+                  onClick={
+                    () =>
+                      navigate(`/edit-theme/${selectedTheme.id}`, {
+                        state: { theme: selectedTheme },
+                      }) // Navigate to edit theme page with selected theme data
                   }
                   className="bg-blue-600 hover:bg-blue-800 text-white font-bold py-2 px-6 rounded-full shadow-md transition-all duration-300"
                 >
@@ -171,8 +201,8 @@ const ManageThemes = () => {
                 </button>
                 <button
                   onClick={() => {
-                    setThemeToDelete(selectedTheme);
-                    setConfirmDelete(true);
+                    setThemeToDelete(selectedTheme); // Set theme for deletion
+                    setConfirmDelete(true); // Open delete confirmation dialog
                   }}
                   className="bg-red-600 hover:bg-red-800 text-white font-bold py-2 px-6 rounded-full shadow-md transition-all duration-300"
                 >
@@ -190,7 +220,7 @@ const ManageThemes = () => {
                 </h2>
                 <div className="flex justify-around mt-4">
                   <button
-                    onClick={() => setConfirmDelete(false)}
+                    onClick={() => setConfirmDelete(false)} // Close confirmation dialog
                     className="bg-gray-600 hover:bg-gray-800 text-white font-bold py-2 px-6 rounded-full shadow-md transition-all duration-300"
                   >
                     No
@@ -198,7 +228,7 @@ const ManageThemes = () => {
                   <button
                     onClick={() =>
                       handleDelete(
-                        themeToDelete.id,
+                        themeToDelete.id, // Execute deletion of the theme
                         themeToDelete.background_img
                       )
                     }

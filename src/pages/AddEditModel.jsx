@@ -1,4 +1,3 @@
-// src/pages/AddEditModel.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { db } from "../firebaseConfig";
@@ -11,103 +10,152 @@ import {
   deleteDoc,
 } from "firebase/firestore";
 
+/**
+ * AddEditModel component handles the creation and editing of AI models.
+ * It allows users to specify API details such as URL, method, headers, and body fields.
+ *
+ * @component
+ * @returns {JSX.Element} The rendered component
+ */
 const AddEditModel = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const [modelUrl, setModelUrl] = useState("");
-  const [method, setMethod] = useState("POST");
+  const { id } = useParams(); // Retrieves the model ID from the URL if in edit mode
+  const navigate = useNavigate(); // Hook for navigation
+  const [modelUrl, setModelUrl] = useState(""); // State for the model URL
+  const [method, setMethod] = useState("POST"); // State for the HTTP method
   const [headers, setHeaders] = useState([
-    { name: "", value: "", type: "string" },
+    { name: "", value: "", type: "string" }, // State for headers array
   ]);
   const [bodyFields, setBodyFields] = useState([
-    { name: "", value: "", type: "string" },
+    { name: "", value: "", type: "string" }, // State for body fields array
   ]);
-  const [promptFieldName, setPromptFieldName] = useState("");
-  const [imageDataFieldName, setImageDataFieldName] = useState("");
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [error, setError] = useState(null);
+  const [promptFieldName, setPromptFieldName] = useState(""); // State for prompt field name
+  const [imageDataFieldName, setImageDataFieldName] = useState(""); // State for image data field name
+  const [isEditMode, setIsEditMode] = useState(false); // Determines if in edit mode
+  const [error, setError] = useState(null); // Error state for validation
 
+  // Fetch model details if in edit mode
   useEffect(() => {
     if (id) {
-      setIsEditMode(true);
-      fetchModel();
+      setIsEditMode(true); // Set edit mode
+      fetchModel(); // Fetch existing model details
     }
   }, [id]);
 
+  /**
+   * Fetches the model data from Firestore and populates the form fields.
+   */
   const fetchModel = async () => {
     try {
-      const docRef = doc(db, "AIModels", id);
-      const docSnap = await getDoc(docRef);
+      const docRef = doc(db, "AIModels", id); // Reference to the document
+      const docSnap = await getDoc(docRef); // Get document snapshot
       if (docSnap.exists()) {
-        const data = docSnap.data();
-        setModelUrl(data.url);
-        setMethod(data.method);
-        setHeaders(data.headers || [{ name: "", value: "", type: "string" }]);
+        const data = docSnap.data(); // Extract data
+        setModelUrl(data.url); // Set model URL
+        setMethod(data.method); // Set method
+        setHeaders(data.headers || [{ name: "", value: "", type: "string" }]); // Set headers
         setBodyFields(
           data.bodyFields || [{ name: "", value: "", type: "string" }]
-        );
-        setPromptFieldName(data.promptFieldName);
-        setImageDataFieldName(data.imageDataFieldName);
+        ); // Set body fields
+        setPromptFieldName(data.promptFieldName); // Set prompt field name
+        setImageDataFieldName(data.imageDataFieldName); // Set image data field name
       } else {
-        console.error("No such document!");
+        console.error("No such document!"); // Log error if document doesn't exist
       }
     } catch (error) {
-      console.error("Error fetching model:", error);
+      console.error("Error fetching model:", error); // Log any errors
     }
   };
 
+  /**
+   * Adds a new header to the headers array.
+   * Validates to ensure all header fields are filled before adding.
+   */
   const handleAddHeader = () => {
     if (headers.some((header) => !header.name || !header.value)) {
-      setError("Please fill both field name and value before adding.");
+      setError("Please fill both field name and value before adding."); // Set error if validation fails
       return;
     }
-    setHeaders([...headers, { name: "", value: "", type: "string" }]);
-    setError(null);
+    setHeaders([...headers, { name: "", value: "", type: "string" }]); // Add a new header object
+    setError(null); // Reset error
   };
 
+  /**
+   * Removes a header from the headers array at the specified index.
+   *
+   * @param {number} index - Index of the header to be removed
+   */
   const handleRemoveHeader = (index) => {
     if (headers.length > 1) {
-      const updatedHeaders = headers.filter((_, i) => i !== index);
-      setHeaders(updatedHeaders);
+      const updatedHeaders = headers.filter((_, i) => i !== index); // Remove the specified header
+      setHeaders(updatedHeaders); // Update headers array
     }
   };
 
+  /**
+   * Handles changes to header fields and updates the state.
+   *
+   * @param {number} index - Index of the header being changed
+   * @param {string} field - Field name (name, value, type) being changed
+   * @param {string} value - New value for the field
+   */
   const handleHeaderChange = (index, field, value) => {
     const updatedHeaders = headers.map((header, i) => {
       if (i === index) {
-        return { ...header, [field]: value };
+        return { ...header, [field]: value }; // Update specific header field
       }
-      return header;
+      return header; // Return unchanged headers
     });
-    setHeaders(updatedHeaders);
+    setHeaders(updatedHeaders); // Set updated headers
   };
 
+  /**
+   * Adds a new body field to the bodyFields array.
+   * Validates to ensure all body field inputs are filled before adding.
+   */
   const handleAddBodyField = () => {
     if (bodyFields.some((field) => !field.name || !field.value)) {
-      setError("Please fill both field name and value before adding.");
+      setError("Please fill both field name and value before adding."); // Set error if validation fails
       return;
     }
-    setBodyFields([...bodyFields, { name: "", value: "", type: "string" }]);
-    setError(null);
+    setBodyFields([...bodyFields, { name: "", value: "", type: "string" }]); // Add a new body field
+    setError(null); // Reset error
   };
 
+  /**
+   * Removes a body field from the bodyFields array at the specified index.
+   *
+   * @param {number} index - Index of the body field to be removed
+   */
   const handleRemoveBodyField = (index) => {
-    const updatedBodyFields = bodyFields.filter((_, i) => i !== index);
-    setBodyFields(updatedBodyFields);
+    const updatedBodyFields = bodyFields.filter((_, i) => i !== index); // Remove specified body field
+    setBodyFields(updatedBodyFields); // Update bodyFields array
   };
 
+  /**
+   * Handles changes to body fields and updates the state.
+   *
+   * @param {number} index - Index of the body field being changed
+   * @param {string} field - Field name (name, value, type) being changed
+   * @param {string} value - New value for the field
+   */
   const handleBodyFieldChange = (index, field, value) => {
     const updatedBodyFields = bodyFields.map((bodyField, i) => {
       if (i === index) {
-        return { ...bodyField, [field]: value };
+        return { ...bodyField, [field]: value }; // Update specific body field
       }
-      return bodyField;
+      return bodyField; // Return unchanged body fields
     });
-    setBodyFields(updatedBodyFields);
+    setBodyFields(updatedBodyFields); // Set updated body fields
   };
 
+  /**
+   * Handles form submission to add or update the AI model.
+   * Validates the inputs and either updates the existing model or adds a new one.
+   *
+   * @param {Event} e - Form submission event
+   */
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevent default form submission
     if (
       !modelUrl ||
       !method ||
@@ -117,7 +165,7 @@ const AddEditModel = () => {
     ) {
       setError(
         "All required fields must be filled and at least one header must be provided."
-      );
+      ); // Set error if validation fails
       return;
     }
 
@@ -128,42 +176,58 @@ const AddEditModel = () => {
       bodyFields,
       promptFieldName,
       imageDataFieldName,
-    };
+    }; // Model data object
 
     try {
       if (isEditMode) {
-        await updateDoc(doc(db, "AIModels", id), modelData);
+        await updateDoc(doc(db, "AIModels", id), modelData); // Update existing model
       } else {
-        await addDoc(collection(db, "AIModels"), modelData);
+        await addDoc(collection(db, "AIModels"), modelData); // Add new model
       }
-      navigate("/manage-ai");
+      navigate("/manage-ai"); // Navigate to manage AI page
     } catch (err) {
-      console.error("Error saving model:", err);
-      setError("Error saving model. Please try again.");
+      console.error("Error saving model:", err); // Log error
+      setError("Error saving model. Please try again."); // Set error message
     }
   };
 
+  /**
+   * Navigates back to the manage AI page without making changes.
+   */
   const handleCancel = () => {
-    navigate("/manage-ai");
+    navigate("/manage-ai"); // Navigate to manage AI page
   };
 
+  /**
+   * Deletes the current model if in edit mode.
+   * Confirms deletion and navigates back to the manage AI page.
+   */
   const handleDelete = async () => {
     try {
-      await deleteDoc(doc(db, "AIModels", id));
-      navigate("/manage-ai");
+      await deleteDoc(doc(db, "AIModels", id)); // Delete model document
+      navigate("/manage-ai"); // Navigate to manage AI page
     } catch (error) {
-      console.error("Error deleting model:", error);
-      setError("Error deleting model. Please try again.");
+      console.error("Error deleting model:", error); // Log error
+      setError("Error deleting model. Please try again."); // Set error message
     }
   };
 
+  /**
+   * Renders input fields for header or body fields with dynamic types.
+   *
+   * @param {Object} field - The field object containing name, value, and type
+   * @param {number} index - Index of the field in the array
+   * @param {string} type - Type of the field (headers or bodyFields)
+   * @param {function} handleChange - Function to handle field changes
+   * @returns {JSX.Element} Rendered input element
+   */
   const renderFieldInput = (field, index, type, handleChange) => {
     switch (field.type) {
       case "boolean":
         return (
           <input
             type="checkbox"
-            checked={field.value === "true"}
+            checked={field.value === "true"} // Boolean checkbox
             onChange={(e) =>
               handleChange(index, "value", e.target.checked ? "true" : "false")
             }
@@ -174,7 +238,7 @@ const AddEditModel = () => {
         return (
           <input
             type="number"
-            value={field.value}
+            value={field.value} // Integer input
             onChange={(e) => handleChange(index, "value", e.target.value)}
             className="shadow appearance-none border rounded py-2 px-3 text-white leading-tight bg-gray-800 focus:outline-none focus:shadow-outline w-1/3"
           />
@@ -183,7 +247,7 @@ const AddEditModel = () => {
         return (
           <input
             type="text"
-            value={field.value}
+            value={field.value} // Default string input
             onChange={(e) => handleChange(index, "value", e.target.value)}
             className="shadow appearance-none border rounded py-2 px-3 text-white leading-tight bg-gray-800 focus:outline-none focus:shadow-outline w-1/3"
           />
@@ -194,7 +258,8 @@ const AddEditModel = () => {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen text-white bg-gray-900 p-4">
       <h1 className="text-4xl mb-8">
-        {isEditMode ? "Edit Model" : "Add New Model"}
+        {isEditMode ? "Edit Model" : "Add New Model"}{" "}
+        {/* Conditional heading */}
       </h1>
       <form onSubmit={handleSubmit} className="w-full max-w-lg space-y-4">
         <div>
@@ -261,7 +326,7 @@ const AddEditModel = () => {
                 type="button"
                 onClick={() => handleRemoveHeader(index)}
                 className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded"
-                disabled={headers.length === 1}
+                disabled={headers.length === 1} // Prevent removal if only one header
               >
                 Remove
               </button>
